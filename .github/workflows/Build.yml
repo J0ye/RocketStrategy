@@ -13,8 +13,10 @@ jobs:
           - StandaloneWindows
           - StandaloneWindows64
           - StandaloneLinux64
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Repository
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
           lfs: true
@@ -22,9 +24,9 @@ jobs:
       - name: Setup Unity
         uses: game-ci/unity-activate@v2
         with:
-          unityVersion: 2022.3.52f1
+          unityVersion: 2022.3.4f1  # Updated to a valid version
 
-      - name: Clean Unity Cache
+      - name: Clean Unity Cache (Prevent Corrupt Builds)
         run: |
           rm -rf Library/ Temp/ obj/
 
@@ -33,24 +35,30 @@ jobs:
           cd $GITHUB_WORKSPACE
           unity-editor -batchmode -quit -projectPath . -executeMethod UnityEditor.SyncVS
 
-      - uses: actions/cache@v3
+      - name: Cache Unity Library (Faster Builds)
+        uses: actions/cache@v3
         with:
           path: Library
-          key: Library-${{ matrix.targetPlatform }}
-          restore-keys: Library-
+          key: Library-${{ matrix.targetPlatform }}-${{ hashFiles('**/Packages/manifest.json') }}
+          restore-keys: |
+            Library-${{ matrix.targetPlatform }}-
+            Library-
 
-      - uses: game-ci/unity-builder@v4
+      - name: Run Unity Build
+        uses: game-ci/unity-builder@v4
         env:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
           targetPlatform: ${{ matrix.targetPlatform }}
-          unityVersion: 2022.3.52f1
+          unityVersion: 2022.3.4f1  # Ensure the same version is used
+          modules: IL2CPP,Windows,Mac,Linux # Include IL2CPP if needed
           buildMethod: BuildScript.PerformBuild
           customParameters: -logFile -
 
-      - uses: actions/upload-artifact@v4
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
         with:
           name: Build-${{ matrix.targetPlatform }}
           path: build/${{ matrix.targetPlatform }}
