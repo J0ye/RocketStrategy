@@ -21,7 +21,12 @@ jobs:
         with:
           fetch-depth: 0
           lfs: true
+      - name: Use Environment Secret
+        run: echo "License Key is ${{ secrets.UNITY_LICENSE }}"
 
+      - name: Use EMAIL Secret
+        run: echo "EMAIL is ${{ secrets.UNITY_EMAIL }}"
+        
       - name: Setup Unity
         uses: game-ci/unity-activate@v2
         with:
