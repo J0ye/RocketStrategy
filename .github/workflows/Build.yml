@@ -53,7 +53,7 @@ jobs:
         with:
           targetPlatform: ${{ matrix.targetPlatform }}
           unityVersion: 2022.3.4f1  # Ensure the same version is used
-          modules: IL2CPP,Windows,Mac,Linux # Include IL2CPP if needed
+          modules: IL2CPP,Windows,Linux # Include IL2CPP if needed
           buildMethod: BuildScript.PerformBuild
           customParameters: -logFile -
 
