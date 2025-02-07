@@ -10,19 +10,35 @@ jobs:
       fail-fast: false
       matrix:
         targetPlatform:
-          - StandaloneWindows # Build a Windows standalone.
+          - StandaloneWindows
+          - StandaloneWindows64
+          - StandaloneLinux64
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           lfs: true
+
+      - name: Setup Unity
+        uses: game-ci/unity-activate@v2
+        with:
+          unityVersion: 2022.3.52f1
+
+      - name: Clean Unity Cache
+        run: |
+          rm -rf Library/ Temp/ obj/
+
+      - name: Restore Unity Packages
+        run: |
+          cd $GITHUB_WORKSPACE
+          unity-editor -batchmode -quit -projectPath . -executeMethod UnityEditor.SyncVS
+
       - uses: actions/cache@v3
         with:
           path: Library
           key: Library-${{ matrix.targetPlatform }}
           restore-keys: Library-
-      - if: matrix.targetPlatform == 'Android'
-        uses: jlumbroso/free-disk-space@v1.3.1
+
       - uses: game-ci/unity-builder@v4
         env:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
@@ -30,6 +46,10 @@ jobs:
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
           targetPlatform: ${{ matrix.targetPlatform }}
+          unityVersion: 2022.3.52f1
+          buildMethod: BuildScript.PerformBuild
+          customParameters: -logFile -
+
       - uses: actions/upload-artifact@v4
         with:
           name: Build-${{ matrix.targetPlatform }}
